@@ -17,6 +17,8 @@ import eu.dozd.mongo.entity.TestEntityRef;
 import eu.dozd.mongo.entity.TestEntityTransient;
 import eu.dozd.mongo.entity.TestEntityWithEmbedded;
 import eu.dozd.mongo.entity.TestEntityWithEncrypt;
+import eu.dozd.mongo.entity.TestEntityWithEncrypt2;
+import eu.dozd.mongo.entity.TestEntityWithEncrypt2.TimeTicketStatus;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -196,6 +198,31 @@ public class MongoMapperIT extends AbstractMongoIT {
     collection.insertOne(entity);
 
     TestEntityWithEncrypt returned = collection.find().first();
+    Assert.assertEquals(entity.getEmbedded(), returned.getEmbedded());
+    Assert.assertEquals(entity.getName(), returned.getName());
+  }
+
+  @Test
+  public void testEncrypt2() throws Exception {
+    MongoCollection<TestEntityWithEncrypt2> collection = db.getCollection("test_encrypt2",
+        TestEntityWithEncrypt2.class);
+    // collection.drop();
+
+    TestEntityWithEncrypt entity = new TestEntityWithEncrypt();
+    entity.setName("testing");
+    entity.setEmbedded("123456");
+
+    TestEntityWithEncrypt2 encryptEntity = new TestEntityWithEncrypt2();
+
+    encryptEntity.setName("testing");
+    encryptEntity.setEmbedded("123456");
+    encryptEntity.setListObj(Arrays.asList(entity));
+
+    encryptEntity.setTimes_ticket_status(new TimeTicketStatus(123L, 789L, "ABC"));
+
+    collection.insertOne(encryptEntity);
+
+    TestEntityWithEncrypt2 returned = collection.find().first();
     Assert.assertEquals(entity.getEmbedded(), returned.getEmbedded());
     Assert.assertEquals(entity.getName(), returned.getName());
   }
