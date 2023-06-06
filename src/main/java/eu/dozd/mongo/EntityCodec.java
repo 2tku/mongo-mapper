@@ -15,6 +15,8 @@ import java.util.*;
  */
 class EntityCodec<T> implements CollectibleCodec<T> {
     private static final String ID_FIELD = "_id";
+    private static final String END_FIX = "_encrypt";
+
     private final Class<T> clazz;
     private final EntityInfo info;
     private final IdGenerator idGenerator;
@@ -114,6 +116,8 @@ class EntityCodec<T> implements CollectibleCodec<T> {
                                 ? o
                                 // assume String here - if false, a ClassCastException is thrown
                                 : Enum.valueOf((Class<? extends Enum>) info.getFieldType(field), (String) o);
+                } else if (info.isEncryptField(field)) {
+                    o = o == null ? null : ((String) o).endsWith(END_FIX) ? ((String) o).replace(END_FIX, "") : o;
                 }
                 info.setValue(t, field, o);
             }
@@ -189,6 +193,12 @@ class EntityCodec<T> implements CollectibleCodec<T> {
                 if (value != null || !info.isNonNull(field)) {
                     document.put(field, value);
                 }
+            } else if (info.isEncryptField(field)) {
+              // check for encrypt field
+              String value = (String) info.getValue(t, field);
+              if (value != null || !info.isNonNull(field)) {
+                document.put(field, value + END_FIX);
+              }
             } else {
                 Object value = info.getValue(t, field);
                 if (value != null || !info.isNonNull(field)) {
